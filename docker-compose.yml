@@ -1,0 +1,46 @@
+services:
+
+  database:
+    image: postgres:16
+    container_name: deveats_db
+    environment:
+      POSTGRES_DB: deveats
+      POSTGRES_USER: deveats
+      POSTGRES_PASSWORD: deveats123
+    volumes:
+      - deveats_volume:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - deveats_network
+
+  backend:
+    build: ./backend
+    container_name: deveats_backend
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: deveats_db
+      DB_PORT: 5432
+      DB_NAME: deveats
+      DB_USER: deveats
+      DB_PASSWORD: deveats123
+    networks:
+      - deveats_network
+    depends_on:
+      - database
+  
+  frontend:
+    build: ./frontend
+    container_name: deveats_frontend
+    ports:
+      - "8081:80"
+    networks:
+      - deveats_network
+    depends_on:
+      - backend
+
+volumes:
+  deveats_volume:
+
+networks:
+  deveats_network:
