@@ -32,13 +32,13 @@ pipeline {
                 sh '''
                     echo "Waiting for frontend..."
 
-                    for i in 1 2 3 4 5 6 7 8 9 10; do
+                    for i in $(seq 1 15); do
                         if docker compose exec -T frontend wget -qO- http://localhost/api/health; then
                             echo "Health check passed!"
                             exit 0
                         fi
 
-                        echo "Attempt $i failed. Waiting 2 seconds..."
+                        echo "Frontend not ready yet... retrying"
                         sleep 2
                     done
 
