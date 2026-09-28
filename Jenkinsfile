@@ -29,7 +29,20 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                sh 'docker compose exec -T frontend wget -qO- http://localhost/api/health'
+                sh '''
+                    for i in {1..10}; do
+                        if docker compose exec -T frontend wget -qO- http://localhost/api/health; then
+                            echo "Health check passed!"
+                            exit 0
+                        fi
+
+                        echo "Waiting for frontend..."
+                        sleep 3
+                    done
+
+                    echo "Health check failed!"
+                    exit 1
+                '''
             }
         }
     }
