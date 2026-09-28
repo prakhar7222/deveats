@@ -21,6 +21,54 @@ pipeline {
             }
         }
 
+        stage('Wait for Database') {
+            steps {
+                sh '''
+                    echo "Waiting for PostgreSQL..."
+
+                    for i in $(seq 1 30); do
+                        if docker compose exec -T database pg_isready -U deveats -d deveats; then
+                            echo "PostgreSQL is ready!"
+                            break
+                        fi
+
+                        echo "PostgreSQL not ready yet... attempt $i/30"
+                        sleep 2
+
+                        if [ "$i" -eq 30 ]; then
+                            echo "PostgreSQL failed to become ready"
+                            docker compose logs database
+                            exit 1
+                        fi
+                    done
+                '''
+            }
+        }
+
+        stage('Wait for Backend') {
+            steps {
+                sh '''
+                    echo "Waiting for Backend..."
+
+                    for i in $(seq 1 30); do
+                        if docker compose exec -T backend python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health', timeout=2)" >/dev/null 2>&1; then
+                            echo "Backend is ready!"
+                            break
+                        fi
+
+                        echo "Backend not ready yet... attempt $i/30"
+                        sleep 2
+
+                        if [ "$i" -eq 30 ]; then
+                            echo "Backend failed to become ready"
+                            docker compose logs backend
+                            exit 1
+                        fi
+                    done
+                '''
+            }
+        }
+
         stage('Run Tests') {
             steps {
                 sh 'docker compose exec -T backend pytest -v'
@@ -29,22 +77,7 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                sh '''
-                    echo "Waiting for frontend..."
-
-                    for i in $(seq 1 15); do
-                        if docker compose exec -T frontend wget -qO- http://localhost/api/health; then
-                            echo "Health check passed!"
-                            exit 0
-                        fi
-
-                        echo "Frontend not ready yet... retrying"
-                        sleep 2
-                    done
-
-                    echo "Health check failed!"
-                    exit 1
-                '''
+                sh 'docker compose exec -T backend python -c "import urllib.request; print(urllib.request.urlopen(\"http://localhost:5000/api/health\").read().decode())"'
             }
         }
     }
@@ -52,6 +85,7 @@ pipeline {
     post {
         always {
             sh 'docker compose ps || true'
+            sh 'docker compose logs --tail=50 || true'
             sh 'docker compose down -v || true'
         }
 
