@@ -11,6 +11,12 @@ services:
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks:
       - deveats_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U deveats -d deveats"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
 
   backend:
     build: ./backend
@@ -25,7 +31,8 @@ services:
     networks:
       - deveats_network
     depends_on:
-      - database
+      database:
+        condition: service_healthy
 
   frontend:
     build: ./frontend

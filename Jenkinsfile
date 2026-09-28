@@ -17,7 +17,11 @@ pipeline {
 
         stage('Start Services') {
             steps {
-                sh 'docker compose up -d'
+                sh '''
+                    docker ps -q --filter "publish=5000" | xargs -r docker rm -f
+                    docker ps -q --filter "publish=8081" | xargs -r docker rm -f
+                    docker compose up -d --wait
+                '''
             }
         }
 
