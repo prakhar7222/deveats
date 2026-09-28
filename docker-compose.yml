@@ -2,7 +2,7 @@ services:
 
   database:
     image: postgres:16
-    container_name: deveats_db
+    
     environment:
       POSTGRES_DB: deveats
       POSTGRES_USER: deveats
@@ -15,11 +15,10 @@ services:
 
   backend:
     build: ./backend
-    container_name: deveats_backend
     ports:
       - "5000:5000"
     environment:
-      DB_HOST: deveats_db
+      DB_HOST: database
       DB_PORT: 5432
       DB_NAME: deveats
       DB_USER: deveats
@@ -31,7 +30,6 @@ services:
   
   frontend:
     build: ./frontend
-    container_name: deveats_frontend
     ports:
       - "8081:80"
     networks:
