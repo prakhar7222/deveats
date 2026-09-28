@@ -30,14 +30,16 @@ pipeline {
         stage('Health Check') {
             steps {
                 sh '''
-                    for i in {1..10}; do
+                    echo "Waiting for frontend..."
+
+                    for i in 1 2 3 4 5 6 7 8 9 10; do
                         if docker compose exec -T frontend wget -qO- http://localhost/api/health; then
                             echo "Health check passed!"
                             exit 0
                         fi
 
-                        echo "Waiting for frontend..."
-                        sleep 3
+                        echo "Attempt $i failed. Waiting 2 seconds..."
+                        sleep 2
                     done
 
                     echo "Health check failed!"
