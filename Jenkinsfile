@@ -29,7 +29,7 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                sh 'curl -f http://localhost:8081/api/health'
+                sh 'docker compose exec -T frontend wget -qO- http://localhost/api/health'
             }
         }
     }
@@ -37,6 +37,7 @@ pipeline {
     post {
         always {
             sh 'docker compose ps || true'
+            sh 'docker compose down -v || true'
         }
 
         success {

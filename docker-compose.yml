@@ -15,8 +15,6 @@ services:
 
   backend:
     build: ./backend
-    ports:
-      - "5000:5000"
     environment:
       DB_HOST: database
       DB_PORT: 5432
@@ -30,8 +28,6 @@ services:
   
   frontend:
     build: ./frontend
-    ports:
-      - "8081:80"
     networks:
       - deveats_network
     depends_on:
